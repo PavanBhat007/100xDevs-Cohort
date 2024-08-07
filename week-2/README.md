@@ -531,6 +531,7 @@ Ex: Git, Mercurial
 This removes the **Single point of failure** as if the main trunk ever goes down, we can get the updates from another particiapnt's copy. This also means that the server need not always be online, as an individual keeps pushing their updated code ti thei local copy and all thse local copies are merged later to keep the main trunk up-to-date.
 
 **_Git_: free and open source VCS**
+
 Advantages: Free, Open source, Scalable, Fast, Cheap/Inexpensive branching and merging
 
 ## GitHub
@@ -570,27 +571,41 @@ Steps of working with **Git**:
 | Push | `git push <branch>` | Upload commits to git repo, like GitHub |
 | Pull | `git pull <branch>` | Download any changes made to the git repo (remote repository) to local repository |
 
+<hr />
+
 #### `git init` : Initialize empty repository
 ![git init](./screenshots/git-init.png)
+
+<hr />
 
 #### `git status` : check status (staged or unstaged) of files
 ![git status](./screenshots/git-status.png)
 
+<hr />
+
 #### `git add`
 ![git add](./screenshots/git-add.png)
 
+<hr />
+
 #### `git rm` : unstage a staged file (`-r` flag for unstaging folder and it's contents)
 ![git rm](./screenshots/git-rm.png)
+
+<hr />
 
 #### `git commit`
 ![git commit](./screenshots/git-commit.png)
 
 At this point, we have created a local repository in Git and committed all the files into the local repository. Next we need to connect the GitHub repository (remote repository) to our local Git repository.
 
+<hr />
+
 #### `git remote` : connect remote GitHub repository to local Git repository
 ![git remote](./screenshots/git-remote.png)
 
 Now we can `pull` (fetch) and `push` code from and to the GitHub repository. Both are denoted by the word **`origin`**.
+
+<hr />
 
 #### `git push` : upload and save the file changes of the commits to the GitHub repository
 ![git push](./screenshots/git-push.png)
@@ -605,10 +620,14 @@ Until now, we created a **GitHub** repo and pushed our local repo's code to it, 
 
 > I will delete all the files from my local machine and clone it newly for demonstration purposes.
 
+<hr />
+
 #### `git clone`
 ![git clone](./screenshots/git-clone.png)
 
 Now it is the same as what we have done before. We can stage files, commit changes and push the commits to the GitHub repo directly without having to set the remote URL, because they are added automatically as we have cloned the GitHub repo itself whcih removes the need to create a local Git repo and connecting it to the remote GitHub repo.
+
+<hr />
 
 ### Branches and Merging
 Branches are used to create an independant copy of the repo so that the changes committed to the branch don't affect the master branch (likely having production ready code). Once the feature in the branch is completed and tested, it can be "merged" with the master branch to integrate that feature.
@@ -616,7 +635,7 @@ Branches are used to create an independant copy of the repo so that the changes 
 #### `git branch` : view branches and used to find out which branch are we currently on
 ![git branch](./screenshots/git-branch.png)
 
-The * indicated which is the branch we are currently using or are on.
+The * indicates which is the branch we are currently using or are on.
 
 #### `git checkout <branch>` : used to switch to another branch (-b flag creates a new branch)
 ![git checkout](./screenshots/git-checkout.png)
@@ -649,6 +668,8 @@ In the above image there is a C4 commit on master, that is not there in the feat
 
 Naturally, git has a way or warning the user saying that there are changes on the master branch that are not available in the branch, which might lead to merge conflicts.
 
+<hr />
+
 #### Git commands to resolve conflicts
 | **Command** | **Description** |
 |:-----------:|-----------------|
@@ -659,7 +680,7 @@ Naturally, git has a way or warning the user saying that there are changes on th
 | **`git merge --abort`** | exit merge process and revert to state before the merging process began |
 | **`git reset`** | reset conflicted files to previous state |
 
-![merge conflict](./screenshots/git-merge-conflict.png)
+![merge conflict](./screenshots/git-merge-conflict.png) <br />
 Both the branches `master` and `hotfix` have made changes to the same `README.md` file, which is causing the conflict.
 
 Easiest way is to manually edit the files causing conflict and resolve the conflict. Git automatically add the seperators and branch headings to that we can know what are the exact parts of the file causing conflict. Remove the additionally added branch names and seperators and make the changes to the file, and commit the changes.
