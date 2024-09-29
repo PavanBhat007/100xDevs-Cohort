@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch Example</title>
+</head>
+<body>
+    <script>
+        async function getAnimalData() {
+            const res = await fetch('https://api.thecatapi.com/v1/images/search');
+            const data = await res.json();
+            document.getElementById("container").innerHTML = JSON.stringify(data);
+        }
+    </script>
+    <button onclick="getAnimalData()">Get animals</button>
+    <div>
+        <p>Response: <span id="container"></span></p>
+    </div>
+</body>
+</html>
