@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO App</title>
+</head>
+<body>
+    <div>
+        <input id="title" type="text" placeholder="title" /><br><br/>
+        <input id="desc" type="text" placeholder="description" /><br/><br/>
+        <button onclick="addTodo()">Add Todo</button>
+    </div>
+    <div id="todo-container"></div>
+
+    <script>
+        let globalId = 1;
+        let todoState = [];
+        let oldTodoState = [];
+
+        function markAsDone(id) {
+            todoState = todoState.filter(todo => todo.id !== id);
+            updateState(todoState);
+            oldTodoState = [...todoState];
+        }
+
+        function renderTodos(todos) {
+            const parent = document.getElementById('todo-container');
+            parent.innerHTML = '';
+
+            todos.forEach(todo => {
+                const child = document.createElement('div');
+                const firstGrandCild = document.createElement('div');
+                const secondGrandChild = document.createElement('div');
+                const thirdGrandChild = document.createElement('button');
+
+                firstGrandCild.innerHTML = `${todo.id}. ${todo.title}`;
+                secondGrandChild.innerHTML = todo.desc;
+                thirdGrandChild.innerHTML = 'Mark as Done';
+                thirdGrandChild.setAttribute('onclick', `markAsDone(${todo.id})`);
+
+                child.appendChild(firstGrandCild);
+                child.appendChild(secondGrandChild);
+                child.appendChild(thirdGrandChild);
+                child.setAttribute('id', todo.id);
+
+                parent.appendChild(child);
+            });
+        }
+
+        function removeTodos(deletedTodos) {
+            const parent = document.getElementById('todo-container');
+            deletedTodos.forEach(todo => {
+                const child = document.getElementById(todo.id);
+                if (child) {
+                    parent.removeChild(child);
+                }
+            });
+        }
+
+        function updateTodos(updatedTodos) {
+            updatedTodos.forEach(todo => {
+                const child = document.getElementById(todo.id);
+                if (child) {
+                    child.children[0].innerHTML = `${todo.id}. ${todo.title}`;
+                    child.children[1].innerHTML = todo.desc;
+                }
+            });
+        }
+
+        function updateState(newTodos) {
+            const added = [], deleted = [], updated = [];
+            
+            // CALCULATING THE DIFF
+            newTodos.forEach(todo => {
+                const oldTodo = oldTodoState.find(old => old.id === todo.id);
+                if (oldTodo) {
+                    if (oldTodo.title !== todo.title || oldTodo.desc !== todo.desc) {
+                        updated.push(todo);
+                    }
+                } else {
+                    added.push(todo);
+                }
+            });
+
+            oldTodoState.forEach(todo => {
+                if (!newTodos.find(newTodo => newTodo.id === todo.id)) {
+                    deleted.push(todo);
+                }
+            });
+
+            // CALLING THE DELEGATED FUNCTIONS
+            renderTodos(newTodos);
+            removeTodos(deleted);
+            updateTodos(updated);
+        }
+
+        function addTodo() {
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('desc').value;
+            todoState.push({ title, desc: description, id: globalId++ });
+            updateState(todoState);
+            oldTodoState = [...todoState];
+        }
+
+        renderTodos(todoState);
+
+    </script>
+</body>
+</html>

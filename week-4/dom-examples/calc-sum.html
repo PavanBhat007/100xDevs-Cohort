@@ -1,0 +1,17 @@
+<html lang="en">
+    <body>
+        <input id="n1" type="text" placeholder="First number" /><br/><br/>
+        <input id="n2" type="text" placeholder="Second number" /><br/><br/>
+        <button id="btn-sum" type="submit" onclick="calcSum()">Calculate sum</button>
+        <br /><br/>
+        <div>Sum is <span id="result"></span></div>
+    </body>
+    <script>
+        function calcSum () {
+            const num1 = document.getElementById('n1').value;
+            const num2 = document.getElementById('n2').value;
+            const result = document.getElementById('result');
+            result.innerHTML = parseInt(num1) + parseInt(num2);
+        }
+    </script>
+</html>

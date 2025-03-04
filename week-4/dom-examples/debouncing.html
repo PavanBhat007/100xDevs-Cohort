@@ -1,0 +1,51 @@
+<!-- // Backend server for sum: https://sum-server.100xdevs.com/sum?a=1&b=2 -->
+<html lang="en">
+    <body>
+        <input oninput="debouncedSum()" id="n1" type="text" placeholder="First number" /><br/><br/>
+        <input oninput="debouncedSum()" id="n2" type="text" placeholder="Second number" /><br/><br/>
+        <div id="sum"></div>
+        
+        <input oninput="debouncedInterest()" id="principal" type="text" placeholder="Principal" /><br/><br/>
+        <input oninput="debouncedInterest()" id="time" type="text" placeholder="Time" /><br/><br/>
+        <input oninput="debouncedInterest()" id="rate" type="text" placeholder="Rate" /><br/><br/>
+        <div id="interest"></div>
+    </body>
+    <script>
+        let timeout;
+        function debouncedSum() {
+            // if call while waiting the 100ms, stop the clock and restart it
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                calcSum();
+            }, 100);
+        }
+        
+        function debouncedInterest() {
+            // if call while waiting the 100ms, stop the clock and restart it
+            clearTimeout(timeout);
+            timeout= setTimeout(() => {
+                calcInterest();
+            }, 100);
+        }
+
+        async function calcSum () {
+            const num1 = document.getElementById('n1').value;
+            const num2 = document.getElementById('n2').value;
+
+            const res = await fetch(`http://sum-server.100xdevs.com/sum?a=${num1}&b=${num2}`);
+            const result = await res.test();
+            document.getElementById('sum').innerHTML = result;
+        }
+        
+        async function calcInterest () {
+            const principal = document.getElementById('principal').value;
+            const time = document.getElementById('time').value;
+            const rate = document.getElementById('rate').value;
+
+            const res = await fetch(`http://sum-server.100xdevs.com/interest?principal=${principal}&rate=${rate}&time=${time}`);
+            const result = await res.test();
+            document.getElementById('interest').innerHTML = result;
+        }
+    </script>
+</html>
+

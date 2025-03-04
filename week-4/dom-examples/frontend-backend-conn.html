@@ -1,0 +1,34 @@
+<!-- // Backend server for sum: https://sum-server.100xdevs.com/sum?a=1&b=2 -->
+<html lang="en">
+    <body>
+        <input id="n1" type="text" placeholder="First number" /><br/><br/>
+        <input id="n2" type="text" placeholder="Second number" /><br/><br/>
+        <button id="btn-sum" type="submit" onclick="calcSum()">Calculate sum</button>
+        <br /><br/>
+        <div id="result"></div>
+    </body>
+    <script>
+        async function calcSum () {
+            const num1 = document.getElementById('n1').value;
+            const num2 = document.getElementById('n2').value;
+            
+            // hitting backend API with the 2 nums as query params
+            // here we don't want to refresh the page but want to
+            // "silently" hit the server
+            /*
+            fetch('http://sum-server.100xdevs.com/sum?a=' + num1 + '&b=' + num2).then((res) => {
+                // configuring the type of the response
+                res.text().then((sum) => {
+                    document.getElementById('result').innerHTML = sum;
+                });
+            });
+            */
+            
+            // using async-await and string templating
+            const res = await fetch(`http://sum-server.100xdevs.com/sum?a=${num1}&b=${num2}`);
+            const result = await res.test();
+            document.getElementById('result').innerHTML = result;
+        }
+    </script>
+</html>
+

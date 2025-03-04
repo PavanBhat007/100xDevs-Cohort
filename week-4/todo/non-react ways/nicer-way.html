@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TODO App</title>
+    </head>
+
+    <body>
+        <div>
+            <input id="title" type="text" placeholder="title" /><br><br/>
+            <input id="desc" type="text" placeholder="description" /><br/><br/>
+        </div>
+        <div id="todo-container"></div>
+
+        <!-- Moving the script here because if it is above the HTML -->
+        <!-- The script runs first before the DOM is loaded causing error -->
+        <script>
+            /*
+                In this version of the TODO app,
+                Server provides a state with a set of todos
+                Our work is to to take that state and update the DOM
+    
+                No addTodo functionality here => read-only UI i.e., user can't add todos
+            */
+            function createChild(title, desc, id) {
+                const child = document.createElement('div');
+                const firstGrandCild = document.createElement('div');
+                const secondGrandChild = document.createElement('div');
+                const thirdGrandChild = document.createElement('button');
+    
+                firstGrandCild.innerHTML = title;
+                secondGrandChild.innerHTML = desc;
+                thirdGrandChild.innerHTML = 'Mark as Done';
+                thirdGrandChild.setAttribute('onclick', `markAsDone(${id})`);
+    
+                child.appendChild(firstGrandCild);
+                child.appendChild(secondGrandChild);
+                child.appendChild(thirdGrandChild);
+                child.setAttribute('id', id);
+                return child;
+            }
+    
+            // State -> array
+            // every element has a title, desctiption and id
+    
+            function updateDOMAccordingToState(state) {
+                // clearing the DOM first
+                const parent = document.getElementById('todo-container');
+                parent.innerHTML = '';
+    
+                state.forEach(todo => {
+                    const child = createChild(todo.title, todo.desc, todo.id);
+                    parent.appendChild(child);
+                });
+            }
+            
+            /*
+            updateDOMAccordingToState([{
+                title: 'Learn JS',
+                desc: 'Learn JS from scratch',
+                id: 1
+            }, {
+                title: 'Learn React',
+                desc: 'Learn React from scratch',
+                id: 2
+            }]);
+            */
+
+            // Fetch the state from the server every 5 seconds
+            window.setInterval(async function () {
+                const res = await fetch('https://sum-server.100xdevs.com/todos');
+                const state = await res.json();
+                updateDOMAccordingToState(state);
+            }, 5000)
+        </script>
+
+
+    </body>
+</html>
