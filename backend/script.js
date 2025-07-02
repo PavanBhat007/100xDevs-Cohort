@@ -18,7 +18,12 @@ function getSingleTodo(id) {
   return todoDatabase.find((todo) => todo.id === Number(id));
 }
 
-// GET /todos - return 3 to 5 random todos
+// function to get a random integer between 1-max
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+// GET /todos -> return 3 to 5 random todos
 app.get("/todos", (req, res) => {
   console.log("/todos");
   const count = Math.floor(Math.random() * 3) + 3;
@@ -26,7 +31,7 @@ app.get("/todos", (req, res) => {
   res.status(200).json({ todos: todos });
 });
 
-// GET /todo/:id - return todo with given id
+// GET /todo/:id -> return todo with given id
 app.get("/todo", (req, res) => {
   const id = req.query.id;
   const todo = getSingleTodo(id);
@@ -38,6 +43,23 @@ app.get("/todo", (req, res) => {
   }
 
   res.status(200).json({ todo: todo });
+});
+
+// GET /notifications -> returns 4 random no:s b/w 1-200
+app.get("/notifications", (req, res) => {
+  console.log("/notifications");
+
+  const network = getRandomInt(200);
+  const jobs = getRandomInt(200);
+  const messaging = getRandomInt(200);
+  const notifications = getRandomInt(200);
+
+  res.status(200).json({
+    network,
+    jobs,
+    messaging,
+    notifications,
+  });
 });
 
 app.listen(PORT, () => {

@@ -1,8 +1,5 @@
 node_modules
 node_modules/
 
-# avoiding sharing cohort content
-week 3.1 notes from cohort.pdf
-
 # env files
 .env
