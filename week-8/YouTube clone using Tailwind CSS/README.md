@@ -28,3 +28,8 @@
 ## Approach
 
 Build individual small components first and combine all together later (**Bottom-Up Approach**)
+
+## Utilities
+
+- Flowbite Tailwind Compoents
+- Heroicons
