@@ -3,7 +3,7 @@ const zod = require("zod");
 const jwt = require("jsonwebtoken");
 
 const { User, Account } = require("../db");
-const { authMiddleware } = require("../middleware");
+const authMiddleware = require("../middleware");
 
 // /api/v1/user/... routes are handled here
 const router = express.Router();
@@ -38,7 +38,7 @@ router.post("/signup", async (req, res) => {
       .json({ message: "Email already taken / incorrect inputs" });
 
   const user = await User.findOne({ username: body.username });
-  if (user._id) {
+  if (user) {
     return res
       .status(411)
       .json({ message: "Email already taken / incorrect inputs" });
@@ -47,10 +47,10 @@ router.post("/signup", async (req, res) => {
   const newUser = await User.create(body);
   
   // create an account with random balance when new User created
-  await Account.create(
-    newUser._id,
-    1 + (Math.random() * 10000) // random balance b/w 1-10000
-  );
+  await Account.create({
+    userId: newUser._id,
+    balance: Math.floor(1 + (Math.random() * 10000)) // random balance b/w 1-10000
+  });
   const token = jwt.sign({ userId: newUser._id }, jwtSecret);
 
   return res
@@ -59,13 +59,13 @@ router.post("/signup", async (req, res) => {
 });
 
 // login route
-router.post("/signin", (req, res) => {
+router.post("/signin", async (req, res) => {
   const body = req.body;
   const { success } = signinScehma.safeParse(body);
   if (!success)
     return res.status(411).json({ message: "Error while signing in" });
 
-  const user = User.findOne({ username: body.username });
+  const user = await User.findOne({ username: body.username });
   if (!user) return res.status(411).json({ message: "Error while signing in" });
 
   if (user) {
@@ -85,12 +85,16 @@ router.put("/", authMiddleware, async (req, res) => {
   // after successfull authentication, userId is added in the req
   // which is what we can use as a confirmation that user is auth'd
 
-  await User.updateOne(req.body, { id: req.userId });
+  await User.updateOne(
+    { _id: req.userId },
+    { $set: req.body }
+  );
+
   return res.status(200).json({ message: "Updated successfully" });
 });
 
-// URL?filter=<text>
-router.get("/filter", async (req, res) => {
+// URL/search?filter=<text>
+router.get("/search", async (req, res) => {
   const filter = req.query.filter || "";
 
   const users = await User.find({
