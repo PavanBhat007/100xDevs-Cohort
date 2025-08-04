@@ -275,22 +275,22 @@ Using the stories, any other person can look at the components, test them and ma
 
     ```js
     const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer")) {
-        return res.status(403).json({});
-    }
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer")) {
+            return res.status(403).json({});
+        }
 
-    const token = authHeader.split(" ")[1];
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const token = authHeader.split(" ")[1];
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET);
 
-        if (decoded.userId) {
-        req.userId = decoded.userId;
-        next();
-        } else return res.status(403).json("");
-    } catch (err) {
-        return res.status(403).json("");
-    }
+            if (decoded.userId) {
+            req.userId = decoded.userId;
+            next();
+            } else return res.status(403).json("");
+        } catch (err) {
+            return res.status(403).json("");
+        }
     };
     ```
 
@@ -330,7 +330,11 @@ Using the stories, any other person can look at the components, test them and ma
         // after successfull authentication, userId is added in the req
         // which is what we can use as a confirmation that user is auth'd
 
-        await User.updateOne(req.body, { id: req.userId });
+        await User.updateOne(
+            { _id: req.userId },
+            { $set: req.body }
+        );
+
         return res.status(200).json({ message: "Updated successfully" });
         });
         ```
@@ -358,10 +362,11 @@ Using the stories, any other person can look at the components, test them and ma
 11. Initialize balances on signup: Give new user a random balance between 1-10000, just to seed the DB.
 
     ```js
-    await Account.create(
-        newUser._id,
-        1 + (Math.random() * 10000) // random balance b/w 1-10000
-    );
+    // create an account with random balance when new User created
+    await Account.create({
+        userId: newUser._id,
+        balance: Math.floor(1 + (Math.random() * 10000))
+    });
     ```
 
 12. New router for Accounts: router that handles requests coming to _`/api/v1/accounts`_ in _`routes/accounts.js`_.
@@ -372,8 +377,8 @@ Using the stories, any other person can look at the components, test them and ma
         ```js
         // authentication via authMiddleware => userId in req obj
         router.get("/balance", authMiddleware, async (req, res) => {
-        const account = await Account.findOne({ userId: req.userId });
-        res.status(200).json({ balance: account.balance });
+            const account = await Account.findOne({ userId: req.userId });
+            res.status(200).json({ balance: account.balance });
         });
         ```
 
@@ -455,3 +460,113 @@ Using the stories, any other person can look at the components, test them and ma
         All operations between _`startTransaction`_ and _`commitTransaction`_ will be executed if not _`abortTransction`_ in between => rolls-back if any check fails and transaction aborted before commit.
 
         Also _`mongoose`_ enmsures that any data read from DB during transaction will not get updated before transaction committed or aborted => no read-write problem i.e., gives a _`WriteConflict error`_ and fails the initial transaction.
+14. Test the routes using Postman (**Backend Checkpoint**)
+
+# _**Week 8.3: Axios and Fetch difference**_
+
+| AXIOS | FETCH |
+|:-----:|:-----:|
+| External library | Native method provided by Node |
+| Smarter library so no need to convert to json/text/... after getting response => not necessary to know the type of data being returned as axios will parse it automatically. | Need to do a _`response.json()`_ or _`response.text()`_ to convert it => need to know the type of data being sent back upfront so that specific method can be used on response. |
+| Backend data accessible in _`response.data`_ object | Backend data accessible in _`response`_ object as per the response sent from backend |
+| **GET**: _`axios.get(URL)`_ <br/> **POST**: _`axios.post(URL)`_ <br/> **PUT**: _`axios.put(URL)`_ <br/> **DELETE**: _`axios.delete(URL)`_ | **GET**: _`fetch(URL, { method: "GET" })`_ or just  _`fetch(URL)`_ <br/> **POST**: _`fetch(URL, { method: "POST" })`_ <br/> **PUT**: _`fetch(URL, { method: "PUT" })`_ <br/> **DELETE**: _`fetch(URL, { method: "DELETE" })`_  |
+
+### Request Config
+
+In _`axios`_, we can add headers and body to the requests as required as arguments. Query parameters are part of the URL so no extra argument for that.
+
+For GET requests, we cannot attach a body so the request config becomes the second argument after the URL.
+
+```js
+const response = axios.get(/* URL */, {
+    headers: {
+        Authorization: "Bearer 1234"
+    }
+})
+```
+
+For POST/PUT/DELETE requests, we can add a body with some raw JSON as the second argument and the 3rd argument becomes the request config.
+
+```js
+const response = axios.post(/* URL */, {
+    username: "Pavan",
+    password: "123"
+}, {
+    headers: {
+        Authorization: "Bearer 1234"
+    }
+})
+```
+
+### Alternative Axios syntax
+
+Instead of adding the request type as a method on axios, we can just use _`axios()`_ and add the required details in the request config.
+
+```js
+const response = axios({
+    url: /* URL */,
+    method: "POST",
+    headers: {
+        Authorization: "Bearer 1234"
+    },
+    data: {
+        username: "Pavan",
+        password: "123"
+    }
+})
+```
+
+This way the request config looks cleaner as each parameter of the request is mentioned cleanly in just 1 argument, instead of having 2/3 arguments in the previous type.
+
+# _**Week 8.4: PayTM Clone Frontend**_
+
+Important points/concepts:
+
+### _`localStorage`_
+
+When needed to store certain kay-value pairs in browser to maintain "sessions" i.e., when user signs-in we want to keep them signed in until they log out or some period is passed (time-out), _`localStorage`_is used.
+
+- _**`localStorage.setItem(key, value)`**_: add an item in the _`localStorage`_ with passed key, value arguments.
+- _**`const value = localStorage.getItem(key)`**_: retrieve an item from _`localStorage`_ using corresponding key.
+- _**`localStorage.length`**_: returns no: of key-value pairs present in _`localStorage`_.
+- _**`localStorage.removeItem(key)`**_: removes key-value pair from _`localStorage`_ as per corresponding argument passed.
+
+
+### _`useSearchParams`_ hook
+
+_`useSearchParams`_ is a hook given by _`react-router-dom`_, to extract query parameters from the URL.
+
+```js
+import { useSearchParams } from 'react-router-dom';
+const [searchParams] = useSearchParams();
+
+// URL?key1=value1&key2=value2
+const value1 = searchParams.get("key1");
+const value2 = searchParams.get("key2");
+```
+
+### Passing onClick, onChange functions as props
+
+When we want to perform some action in a Parent component but the HTML element is in a child component, 1 way to do it is that pass down the required data as props and run the event handler in the child component or to **pass the event handler function as a props and just call it in the child element**.
+
+> It is similar to **passing a function as a prop** from Parent component and calling function in Child component.
+
+```jsx
+function Parent() {
+    const [input, setInput] = useSatte("");
+
+    // onChahnge function written here and passed as prop
+    return (
+        <InputBox onChange={(e) => setInput(e.target.value)} />
+    )
+}
+
+function Child({ props }) {
+    // just need to call the props.onChange to execute the 
+    // function defined in the Parent
+    // similar to passing a function as prop
+    return (
+        <input onChange={props.onChange} type="text" />
+    )
+}
+```
