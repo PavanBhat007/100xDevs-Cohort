@@ -10,5 +10,5 @@ app.use(express.json());
 // all calls starting with /api/v1 are given to "router"
 app.use("/api/v1", router);
 app.listen(8080, () => {
-    console.log('Server running on port 8080');
+  console.log("Server running on port 8080");
 });

@@ -27,6 +27,26 @@ const updateScehma = zod.object({
   lastName: zod.string().optional(),
 });
 
+// /me route gives logged in user info and
+// if user not logged in returns 403 error
+router.get("/me", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    return res.status(403).json({ message: "Invalid Authorization" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, jwtSecret);
+    if (decoded.userId) {
+      const loggedInUser = await User.findOne({ _id: decoded.userId });
+      return res.status(200).json({ user: loggedInUser });
+    } else return res.status(403).json({ message: "Invalid token" });
+  } catch (err) {
+    return res.status(403).json({ message: "error" });
+  }
+});
+
 // signup route
 router.post("/signup", async (req, res) => {
   const body = req.body;
@@ -45,11 +65,11 @@ router.post("/signup", async (req, res) => {
   }
 
   const newUser = await User.create(body);
-  
+
   // create an account with random balance when new User created
   await Account.create({
     userId: newUser._id,
-    balance: Math.floor(1 + (Math.random() * 10000)) // random balance b/w 1-10000
+    balance: Math.floor(1 + Math.random() * 10000), // random balance b/w 1-10000
   });
   const token = jwt.sign({ userId: newUser._id }, jwtSecret);
 
@@ -85,19 +105,18 @@ router.put("/", authMiddleware, async (req, res) => {
   // after successfull authentication, userId is added in the req
   // which is what we can use as a confirmation that user is auth'd
 
-  await User.updateOne(
-    { _id: req.userId },
-    { $set: req.body }
-  );
+  await User.updateOne({ _id: req.userId }, { $set: req.body });
 
   return res.status(200).json({ message: "Updated successfully" });
 });
 
 // URL/search?filter=<text>
-router.get("/search", async (req, res) => {
+router.get("/search", authMiddleware, async (req, res) => {
   const filter = req.query.filter || "";
+  const loggedInUserId = req.userId;
 
   const users = await User.find({
+    _id: { $ne: loggedInUserId },
     $or: [
       {
         firstName: {
