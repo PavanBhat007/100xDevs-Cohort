@@ -1,0 +1,1 @@
+{"root":["./src/create-table.ts","./src/delete-data.ts","./src/get-data.ts","./src/insert-data.ts","./src/update-data.ts","./src/utils.ts","./src/joins/todos-and-user.ts","./src/joins/users-and-todos-inner-join.ts","./src/joins/users-and-todos.ts"],"version":"5.9.2"}
