@@ -181,25 +181,147 @@ This code is very similar to express with the routing logic.
 
     ```js
     async function authMiddleware(c: any, next: any) {
-    const authHeader = c.req.header('Authorization');
-    if (authHeader) {
-        // auth check
+        const authHeader = c.req.header('Authorization');
+        if (authHeader) {
+            // auth check
 
-        await next()
-    } else {
-        return c.text('Unauthorized')
-    }
+            await next()
+        } else {
+            return c.text('Unauthorized')
+        }
     }
 
     // directly use on app
     app.use(authMiddleware);
 
     app.get("/", (c) => {
-    return c.json({ message: "GET /" });
+        return c.json({ message: "GET /" });
     });
 
     // use in specific routes
     app.get('/user', authMiddleware, async (c) => {
-    // ...
+        // ...
     })
     ```
+
+# **_Week 11.2: AWS_**
+
+> Don't have an AWS account, so just taking down important points here. Won't add details of how to perform operations here.
+
+**AWS** is Amazon's cloud provider service. It lets us **rent servers as EC2 instances, manage domains, upload objects in S3 buckets** (mp4, pdf, images, mp3, etc), **auto-scale servers and create Kubernetes clusters**.
+
+For, us the main focus is on renting servers as this would allow us to host a backend on AWS and hit that in our frontend.
+
+## EC2 servers (Elastic Compute v2)
+
+- Elastic -> can increase/decrease the size of the machine
+- Compute -> CPU, RAM, HDD: basically a machine to run code
+
+When creating an EC2 instance, there is an option to create a **Key-Pair** which creates a public and a private key which can be used to SSH into the EC2 instance machine and login/access it. It downloads a `.pem` file which contains the the private key which shouldn't be shared to anyone.
+
+If we want to use SSH (port no: 22), then we need to hit the IP of the server, but we need to allow the EC2 instance to get SSH'd from the IP of our computer, so we need to set the '_Allow SSH from_' and if we put `0.0.0.0/0`, then it can get accessed from anywhere. Also, we need to tell AWS which ports to be open to the Internet using the "_Allow HTTPS/HTTP traffic from the Internet_" options which can be accessed from anywhere by default (because we don't generally specify ports for HTTPS/HTTP as we want the internet to access our app on say `app.100xdevs.com` on default 443 and 80 ports and not `app.100xdevs.com:3000`). So at the end, the **EC2 instance will have ports 22 (SSH), 80 (HTTP) and 443 (HTTPS) open**.
+
+When we login to AWS, we can select a region on the topbar. For our use case we would select _**Asia Pacific (Mumbai)**_ i.e., `ap-south-1`. For our EC2 instance also it will have an `Availability Zone` within the selected reqion, for example `ap-south-1a`.
+
+Every EC2 instance deployed, will have a Public IP which is the main reason we are renting a server, so now _**anyone on the Internet can reach our EC2 instance on the provided Public IP**_.
+
+### Connecting to the EC2 instance
+
+We would be using SSH to connect to the EC2 instance to deploy our code/app onto the server. So, firstly we need to navigate into the folder where our Private Key (Certificate) i.e., `private-key.pem` file is saved and open a terminal there. In the terminal,
+
+```sh
+# ssh: starts the ssh command 
+# -i <file>: input file
+# machine@ip: tells ssh machine name and the public IP where it is available
+# $ ssh -i <file> <machine>@<ip>
+
+$ ssh -i private-key.pem ubuntu@13.234.111.39
+```
+
+It gives a Warning that Private Key file is unprotected and has Permissions 0644 on it. This basically says that UGO (User, Group, Other) have 644 access: User has Read and Write access (6 -> 110 for RWX), Groups and External users (Others) have Read access (4 -> 100 for RWX). So we need to ensure that no one other than the current logged in User can access the file. Run the following command in the terminal.
+
+```sh
+# chmod: change permissions on a file
+# access = 700: gives full Read, Write and eXecute (7 = 111 -> RWX) access to logged in User
+#      No access (0 = 000 -> RWX) to Groups and Others
+# <file>: file whose permissions are to be chnaged
+# $ chmod <access> <file>
+
+$ chmod 700 private-key.pem
+```
+Now it would say "_Welcome to Ubuntu ..._" and we can access the server, and the pwd (present working directory before `$`) changes to `ubuntu@ip$` and is green in color. Now we can execute commands directly on the EC2 server via the CLI.
+
+To exit the SSH session we just type `exit` into the terminal and it closes the SSH session.
+
+### Internet access on EC2 instance
+
+EC2 instances by default don't have access to the Internet themselves (ping any website and it returns failed "_Temporary failure in name resolution"_), so we need to setup that if we wish to clone a repo in the EC2 instance. This means that the server is not able to hit the DNS server.
+
+To solve this we need to edit a comfig file on the server i.e., `/etc/resolv.conf` using `nano` or `vim` with **sudo** access.
+
+```sh
+$ sudo vi /etc/resolv.conf
+```
+
+- Press I: Puts Vim in INSERT mode so we can edit the file
+- Navigate to the file where some defult entries are present (ex: `nameserver 127.0.0.53` -> localhost not DNS)
+- Press Entre and add `nameserver 8.8.8.8` which is the entry for the DNS server.
+- Press Escape key followed by **`:wq` which writes changes and quits vim**.
+
+Now when we ping any site like _google.com_, it sends packets so now the server can perform DNS resolution and access the Internet.
+
+### Next Steps
+
+Since we are trying to deploy our backend/frontend on AWS, we first need to install NodeJS. We can use [NVM (Node Version Manager) to install NodeJS](https://medium.com/geekculture/how-to-install-node-js-by-nvm-61addf4ab1ba) on the server via the CLI. 
+
+Install project dependencies using NPM (`npm install`) and then run the code using `node`.
+
+If the project/backend in listening on any other port (other than the opened ports on the server), we need to open the specific port on the server from the AWS Dashboard.
+
+- Select the Instance.
+- Click on the Security tab and click on the security rules link.
+- Under **Inbound Rules**, click "_Edit inbound rules_".
+- Scroll to the end, click "_Add Rule_" and add the required port: `Custom TCP: Port.`
+- Click on '_Save Rules_'.
+
+_**Now our NodeJS application is deployed on an EC2 instance from AWS, accessible via the Internet using the respective port.**_
+
+> If we make the NodeJS app listen on port 80, then don't need to add the specific port since 80 is default, but it won't work because our NodeJS app doesn't have enough credibility to run on port 80 which is a standard port reserved for HTTP protocol.
+
+## Reverse Proxies
+
+Most of the times, we don't have just 1 app running on the server and need to have multiple applications on it, but we can't use the same 80 port for all of them, and each would be running on a different port. This is where we make use of **_Reverse Proxy_ which would be running on 80 and it will decide which application to route traffic to**.
+
+- Forward Proxy: Server which forwards user to destination server (Ex: VPN)
+- Reverse Proxy: Listening on the destination server and forwards requests within the server to different applications.
+
+### `nginx`
+
+To implement Reverse Proxy on our server, we first need to install `nginx`, which offers many services but the only thing we are using it for now is to add a Reverse Proxy to our server.
+
+```sh
+$ sudo apt install nginx
+```
+
+When installed, it automatically starts `nginx` and by default `nginx` takes over the port 80 with a "_Welcome to nginx!_" message when we hit port 80 on our server.
+
+Next we need to create the Reverse Proxy by telling `nginx` where to point. For this we need to edit the config file which currently has some default configurations. So we can delete that file, create a new one and add our condigs there.
+
+```sh
+$ sudo rm sudo vi /etc/nginx/nginx.conf
+$ sudo vi /etc/nginx/nginx.conf
+```
+
+In the `nginx.conf` file, we need to add:
+
+```conf
+events {
+    # Event directives
+}
+
+http {
+    server {
+        listen 80
+    }
+}
+```
