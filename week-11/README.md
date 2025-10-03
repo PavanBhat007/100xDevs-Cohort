@@ -297,6 +297,8 @@ Most of the times, we don't have just 1 app running on the server and need to ha
 
 ### `nginx`
 
+`nginx` is an open source software for **_web serving, reverse proxying, caching, load balancing, media streaming_**, and more. It started out as a web server designed for maximum performance and stability. In addition to its HTTP server capabilities, `nginx` can also function as a proxy server for email (IMAP, POP3, and SMTP) and as a reverse proxy and load balancer for HTTP, TCP and UDP servers.
+
 To implement Reverse Proxy on our server, we first need to install `nginx`, which offers many services but the only thing we are using it for now is to add a Reverse Proxy to our server.
 
 ```sh
@@ -314,14 +316,42 @@ $ sudo vi /etc/nginx/nginx.conf
 
 In the `nginx.conf` file, we need to add:
 
-```conf
+```nginxconf
 events {
-    # Event directives
+    # Event directives ...
 }
 
 http {
     server {
-        listen 80
+        listen 80;
+        server_name backend1.100xdevs.com;
     }
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade
+    }
+
+    # server {} ...
 }
 ```
+
+Now any requests coming on `backend1.100xdevs.com` is sent to the port **8080**. Next we can reload nginx using
+
+```sh
+$ sudo nginx -s reload
+```
+
+Right now, our app is deployed but it uses HTTP which shows "_Not Secure_" on the browser. To secure it, we need to use HTTPS, and for that we need to add a "_Certificate_"
+
+## Certificate Management
+
+To make a site secure and use HTTPS, we need to add a valid certificate, only then the browser will tell that "_Connection is Secure_" and also will contain the public key of the certificate along with who/what organization it was issued by.
+
+To install a Certificate on our deployed site, we can use _**CertBot**_.
+
+### [CertBot](https://certbot.eff.org)
