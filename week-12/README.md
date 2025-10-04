@@ -1,3 +1,50 @@
+# **_Week 12.1: Deploying Frontends on AWS_**
+
+> Not adding all points about steps because don't have access to AWS account, only important and crucial details will be present below.
+
+Today, most Frontends are deployed on Vercel commonly, but Vercel's pricing becomes expensive at scale and at large scales, it is better to see if deploying on conventional Cloud Providers like AWS is feasible.
+
+### Storage
+
+**Objects**: Non-conventional data (images, mp3, mp4) which are not stored in traditional databases like MongoDB or Postgres. These data are stored in something called as 
+"_**Object Stores**_" and every cloud provider has this service.
+
+_AWS's Object Store service -> **S3** i.e., **Simple Storage Service**_
+
+When we upload an _Object_ to S3, we get an Object URL but this cannot be accessed directly. S3 is just a storage service and to access it, we need to "distribute" it in a certain way.
+
+### Distribution
+
+**CDNs** (Content Delivery Networks): Local servers ("_**Pops**_") distributed around the world, which exist to fetch _Objects_ from the source (S3 bucket or some _Object Store_) and cache it on the CDN, so when another user requests for same _Object_, instead of serving from the source we serve from the CDN itself.
+
+_AWS's CDN service -> **CloudFront**_
+
+> _Object Store_ is a single location where application's _Objects_ are stored and is the "source of truth", and always there will be an associated _CDN_ which provided "_**redundancy**_" by caching the _Objects_ from the source and delivering the cached data more faster to the requests it received from that Network/Area.
+
+## Deploying on AWS
+
+### Source Code
+
+First, we need a React project and need to "_build_" the code to get a deployable version of the project.
+
+In a React Project, if we run the `npm run build` command, it creates a `dist` folder which only contains a `html` file and `assets` folder containing the converted CSS and JS code. This `dist` folder is static and can be served locally using the `serve` module. On AWS, we can deploy only such kind of codebases where it can be converted to plain HTML, CSS and JS, which is not possible for NextJS applications as it includes complex features like _Server Side Rendering_ which can't be deployed on conventional Cloud Providers like AWS.
+
+### Storage (S3)
+
+Next we can create a default S3 bucket on AWS, and upload the `dist` folder into the bucket.
+
+> Don't upload the `dist` folder itself, we have to upload the contents of `dist` folder as the `index.html` needs to be at the root level and not inside a folder.
+
+### Distribution (CloudFront)
+
+_**Origin domain is the source URL**_. It can literally be anything, even `google.com`, and this is where we mention the S3 bucket URI.
+
+**OAC (Origin Access Control)**: Tells CloudFront how the application can be accessed. We can create a new OAC with Signed Requests (recommended for better security) and now S3 bucket will be accessible only via CloudFront and not directly. After this, we need to update the S3 bucket access policy has to be updated to give CloudFront access to S3. At the end of creating the CDN, we get an **Access Policy statement** which has to be added to the S3.
+
+**Default Root object** should be set to `index.html`, which tells CloudFront that when they visit the CDN base URL, be default it should server the `index.html` file which avoids the need to have `URL/index.html` at the end.
+
+After creating the CDN, CloudFront generates the _S3 Access Policy_ and we just copy it and paste it under _S3 > Permissions > Bucket Policy_ which by default blocks all Public Access. The Policy tells that anything under the specific S3 bucket should be accessible to the corresponding newly created CloudFront CDN.
+
 # **_Week 12.2: Advanced TypeScript APIs_**
 
 ## Popular Generics
